@@ -35,6 +35,7 @@ class App extends Component {
 					</div>
 					<img className="bg-decoration" src={decoration} alt="vision" />
 				</main>
+				<div className="char__footer"></div>
 			</div>
 		)
 	}

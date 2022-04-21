@@ -3,7 +3,6 @@ import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 import MarvelService from '../../services/MarvelService';
 import './charList.scss';
-import { toHaveFormValues } from '@testing-library/jest-dom/dist/matchers';
 
 class CharList extends Component {
 
@@ -18,8 +17,29 @@ class CharList extends Component {
 
 	marvelService = new MarvelService();
 
+	options = {
+		rootMargin: '0px',
+		threshold: 1.0
+	};
+	observerSelector = '.char__footer';
+
+	loadCharsByScroll = (entry) => {
+		if (entry[0].isIntersecting && !this.state.loading) {
+			console.log(1);
+			this.onRequest(this.state.offset + 9);
+		}
+	}
+
+	footerObserver = new IntersectionObserver(this.loadCharsByScroll, this.options);
+
 	componentDidMount() {
 		this.onRequest();
+
+		this.footerObserver.observe(document.querySelector(this.observerSelector));
+	}
+
+	componentWillUnmount() {
+		this.footerObserver.unobserve(document.querySelector(this.observerSelector));
 	}
 
 	onRequest = (offset) => {
