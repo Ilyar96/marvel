@@ -1,92 +1,75 @@
-import { Component } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import propTypes from 'prop-types';
 
 
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
-import MarvelService from '../../services/MarvelService';
+import useMarvelService from '../../services/MarvelService';
 import './charList.scss';
 
-class CharList extends Component {
+const CharList = ({ onCharSelected }) => {
+	const [charList, setCharList] = useState([]);
+	const [newItemsLoading, setNewItemsLoading] = useState(false);
+	const [offset, setOffset] = useState(210);
+	const [charEnded, setCharEnded] = useState(false);
+	const [totalCharacters, setTotalCharacters] = useState(0);
 
-	state = {
-		charList: [],
-		loading: true,
-		error: false,
-		newItemsLoading: false,
-		offset: 210,
-		charEnded: false
+	const { loading, error, getTotalCharacters, getAllCharacters } = useMarvelService();
+
+
+
+	useEffect(() => {
+		onRequest(offset, true);
+		getTotalCharacters().then(res => setTotalCharacters(res.total));
+	}, [])
+
+	useEffect(() => {
+		const options = {
+			rootMargin: '0px',
+			threshold: 1.0
+		};
+		const target = document.querySelector('.char__footer');
+
+		const loadCharsByScroll = (entry) => {
+			if (entry[0].isIntersecting && !loading) {
+				onRequest(offset + 9);
+			}
+		}
+
+		const footerObserver = new IntersectionObserver(loadCharsByScroll, options);
+
+		footerObserver.observe(target);
+
+		return () => {
+			footerObserver.unobserve(target);
+		}
+	})
+
+	const onRequest = (offset, initial) => {
+		initial ? setNewItemsLoading(false) : setNewItemsLoading(true);
+
+		getAllCharacters(offset)
+			.then(onCharListLoaded);
 	}
 
-	marvelService = new MarvelService();
-
-	options = {
-		rootMargin: '0px',
-		threshold: 1.0
-	};
-	observerSelector = '.char__footer';
-
-	loadCharsByScroll = (entry) => {
-		if (entry[0].isIntersecting && !this.state.loading)
-			this.onRequest(this.state.offset + 9);
-
+	const focusOnItem = id => {
+		itemRefs.current.forEach(item => item.classList.remove('char__item_selected'));
+		itemRefs.current[id].classList.add('char__item_selected');
+		itemRefs.current[id].focus();
 	}
 
-	footerObserver = new IntersectionObserver(this.loadCharsByScroll, this.options);
+	const onCharListLoaded = (newCharList) => {
+		let ended = totalCharacters !== 0 && (totalCharacters - offset <= 9) ? true : false;
 
-	componentDidMount() {
-		this.onRequest();
-
-		this.footerObserver.observe(document.querySelector(this.observerSelector));
+		setCharList(() => [...charList, ...newCharList]);
+		setNewItemsLoading(() => false);
+		setOffset(() => offset + 9);
+		setCharEnded(() => ended);
 	}
 
-	componentWillUnmount() {
-		this.footerObserver.unobserve(document.querySelector(this.observerSelector));
-	}
+	const itemRefs = useRef([]);
 
-	onRequest = (offset) => {
-		this.onCharListLoading();
-		this.marvelService.getAllCharacters(offset)
-			.then(this.onCharListLoaded)
-			.catch(this.onError);
-	}
-
-	focusOnItem = id => {
-		this.itemRefs.forEach(item => item.classList.remove('char__item_selected'));
-		this.itemRefs[id].classList.add('char__item_selected');
-		this.itemRefs[id].focus();
-	}
-
-	onCharListLoading = () => {
-		this.setState({ newItemsLoading: true });
-	}
-
-	onCharListLoaded = (newCharList) => {
-		let ended = this.marvelService._totalCharacters - this.state.offset <= 9 ? true : false;
-
-		this.setState(({ charList, offset }) => ({
-			charList: [...charList, ...newCharList],
-			loading: false,
-			newItemsLoading: false,
-			offset: offset + 9,
-			charEnded: ended
-		}))
-	}
-
-	onError = () => {
-		this.setState({
-			error: true,
-			loading: false
-		})
-	}
-
-	itemRefs = [];
-
-	setRef = (ref) => {
-		this.itemRefs.push(ref);
-	}
-
-	renderItems(arr) {
+	const renderItems = arr => {
 		const items = arr.map((item, i) => {
 			let imgStyle = { 'objectFit': 'cover' };
 			if (item.thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg') {
@@ -97,16 +80,17 @@ class CharList extends Component {
 				<li
 					className="char__item"
 					key={item.id}
-					ref={this.setRef}
+					//el ссылка на dom-объект
+					ref={el => itemRefs.current[i] = el}
 					tabIndex="0"
 					onClick={() => {
-						this.props.onCharSelected(item.id);
-						this.focusOnItem(i);
+						onCharSelected(item.id);
+						focusOnItem(i);
 					}}
 					onKeyPress={(e) => {
 						if (e.key === ' ' || e.key === "Enter") {
-							this.props.onCharSelected(item.id);
-							this.focusOnItem(i);
+							onCharSelected(item.id);
+							focusOnItem(i);
 						}
 					}}>
 					<img src={item.thumbnail} alt={item.name} style={imgStyle} />
@@ -121,30 +105,26 @@ class CharList extends Component {
 		)
 	}
 
-	render() {
 
-		const { charList, loading, error, offset, newItemsLoading, charEnded } = this.state;
-		const items = this.renderItems(charList);
+	const items = renderItems(charList);
 
-		const errorMessage = error ? <ErrorMessage /> : null;
-		const spinner = loading ? <Spinner /> : null;
-		const content = !(loading || error) ? items : null;
+	const errorMessage = error ? <ErrorMessage /> : null;
+	const spinner = loading && !newItemsLoading ? <Spinner /> : null;
 
-		return (
-			<div className="char__list">
-				{errorMessage}
-				{spinner}
-				{content}
-				<button
-					className="button button__main button__long"
-					disabled={newItemsLoading}
-					style={{ display: charEnded ? 'none' : 'block' }}
-					onClick={() => { this.onRequest(offset) }}>
-					<div className="inner">load more</div>
-				</button>
-			</div>
-		)
-	}
+	return (
+		<div className="char__list">
+			{errorMessage}
+			{spinner}
+			{items}
+			<button
+				className="button button__main button__long"
+				disabled={newItemsLoading}
+				style={{ display: charEnded ? 'none' : 'block' }}
+				onClick={() => { onRequest(offset) }}>
+				<div className="inner">load more</div>
+			</button>
+		</div>
+	)
 }
 
 CharList.propTypes = {
