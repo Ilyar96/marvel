@@ -1,47 +1,33 @@
-import { useState, useRef } from "react";
+import { useRef } from "react";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
 import AppHeader from "../appHeader/AppHeader";
-import RandomChar from "../randomChar/RandomChar";
-import CharList from "../charList/CharList";
-import CharInfo from "../charInfo/CharInfo";
-import ErrorBoundary from "../errorBoundary/ErrorBoundary";
-import ComicsList from "../comicsList/ComicsList"
+import { MainPage, ComicsPage } from "../pages";
 
-import decoration from '../../resources/img/vision.png';
 
 const App = () => {
-	const [selectedChar, setChar] = useState(null);
 	const observerRef = useRef();
 
-	const onCharSelected = (id) => {
-		setChar(id)
-	}
-
 	return (
-		<div className="app" >
-			<AppHeader />
-			<main>
-				<RandomChar />
-				<div className="char__content">
-					<ErrorBoundary>
-						<CharList onCharSelected={onCharSelected} observerRef={observerRef} />
-					</ErrorBoundary>
-					<aside>
-						<ErrorBoundary>
-							<CharInfo charId={selectedChar} />
-						</ErrorBoundary>
-					</aside>
-				</div>
-				{/* <ErrorBoundary>
-					<ComicsList observerRef={observerRef} />
-				</ErrorBoundary> */}
+		<Router>
+			<div className="app" >
+				<AppHeader />
+				<main>
+					<Switch>
+						<Route exact path="/">
+							<MainPage observerRef={observerRef} />
+						</Route>
 
-				<img className="bg-decoration" src={decoration} alt="vision" />
-			</main>
-			<div
-				ref={observerRef}
-				className="char__footer"></div>
-		</div>
+						<Route exact path="/comics">
+							<ComicsPage observerRef={observerRef} />
+						</Route>
+					</Switch>
+				</main>
+				<div
+					ref={observerRef}
+					className="char__footer"></div>
+			</div>
+		</Router>
 	)
 }
 

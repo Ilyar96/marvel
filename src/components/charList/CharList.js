@@ -48,16 +48,11 @@ const CharList = ({ onCharSelected, observerRef }) => {
 	const onCharListLoaded = (newCharList) => {
 		let ended = totalCharacters !== 0 && (totalCharacters - offset <= 9) ? true : false;
 
-		//! batching
-		//? Компонент много раз перерендеривается из-за того, что наши изменения state находятся внутри асинхронного кода
-		//! В react 18 версии этот момент исправлен
 		setCharList(() => [...charList, ...newCharList]);
 		setNewItemsLoading(() => false);
 		setOffset(() => offset + 9);
 		setCharEnded(() => ended);
 	}
-
-	console.log('render');
 
 	const itemRefs = useRef([]);
 
@@ -98,7 +93,6 @@ const CharList = ({ onCharSelected, observerRef }) => {
 
 
 	const items = renderItems(charList);
-
 	const errorMessage = error ? <ErrorMessage /> : null;
 	const spinner = loading && !newItemsLoading ? <Spinner /> : null;
 

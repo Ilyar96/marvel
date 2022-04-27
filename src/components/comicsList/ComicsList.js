@@ -78,9 +78,9 @@ const ComicsList = ({ observerRef }) => {
 
 	return (
 		<div className="comics__list">
-			{items}
 			{spinner}
 			{errorMessage}
+			{items}
 			<button
 				className="button button__main button__long"
 				onClick={() => onRequest(offset)}
