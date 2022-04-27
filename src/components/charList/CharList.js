@@ -1,47 +1,34 @@
 import { useState, useEffect, useRef } from 'react';
 import propTypes from 'prop-types';
 
-
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 import useMarvelService from '../../services/MarvelService';
+import useIntersectionObserver from '../../hooks/useIntersectionObserver';
 import './charList.scss';
 
-const CharList = ({ onCharSelected }) => {
+const CharList = ({ onCharSelected, observerRef }) => {
 	const [charList, setCharList] = useState([]);
 	const [newItemsLoading, setNewItemsLoading] = useState(false);
 	const [offset, setOffset] = useState(210);
 	const [charEnded, setCharEnded] = useState(false);
 	const [totalCharacters, setTotalCharacters] = useState(0);
 
-	const { loading, error, getTotalCharacters, getAllCharacters } = useMarvelService();
+	const { loading, error, getData, getAllCharacters } = useMarvelService();
 
 
 
 	useEffect(() => {
 		onRequest(offset, true);
-		getTotalCharacters().then(res => setTotalCharacters(res.total));
+		getData().then(res => setTotalCharacters(res.total));
 	}, [])
 
-	useEffect(() => {
-		const options = {
-			rootMargin: '0px',
-			threshold: 1.0
-		};
-		const target = document.querySelector('.char__footer');
-
-		const loadCharsByScroll = (entry) => {
-			if (entry[0].isIntersecting && !loading) {
-				onRequest(offset + 9);
+	useIntersectionObserver({
+		target: observerRef,
+		onIntersect: ([{ isIntersecting }], observerElement) => {
+			if (isIntersecting && !loading) {
+				onRequest(offset);
 			}
-		}
-
-		const footerObserver = new IntersectionObserver(loadCharsByScroll, options);
-
-		footerObserver.observe(target);
-
-		return () => {
-			footerObserver.unobserve(target);
 		}
 	})
 
