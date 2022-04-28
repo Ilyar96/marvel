@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 import AppHeader from "../appHeader/AppHeader";
 import { MainPage, ComicsPage } from "../pages";
@@ -13,15 +13,13 @@ const App = () => {
 			<div className="app" >
 				<AppHeader />
 				<main>
-					<Switch>
-						<Route exact path="/">
-							<MainPage observerRef={observerRef} />
+					<Routes>
+						<Route path="/" element={<MainPage observerRef={observerRef} />} />
+						<Route path="/comics" element={<ComicsPage observerRef={observerRef} />} >
+							//! Создаем вложенную структуру /comics/test || Для вывода дочерних элементов используем компоненнт Outlet
+							<Route path="test" element={<MainPage observerRef={observerRef} />} />
 						</Route>
-
-						<Route exact path="/comics">
-							<ComicsPage observerRef={observerRef} />
-						</Route>
-					</Switch>
+					</Routes>
 				</main>
 				<div
 					ref={observerRef}
