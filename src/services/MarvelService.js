@@ -14,10 +14,20 @@ const useMarvelService = () => {
 		return res.data.results.map(_transformComic);
 	}
 
+	const getComic = async (id) => {
+		const res = await request(`${_apiBase}/comics/${id}?${_apiKey}`);
+		return _transformComic(res.data.results[0]);
+	}
+
 	const getAllCharacters = async (offset = _baseOffset) => {
 		const res = await request(`${_apiBase}characters?limit=9&offset=${offset}&${_apiKey}`);
 
 		return res.data.results.map(_transformCharacter);
+	}
+
+	const getCharacter = async (id) => {
+		const res = await request(`${_apiBase}/characters/${id}?${_apiKey}`);
+		return _transformCharacter(res.data.results[0]);
 	}
 
 	const getData = async (value = 'characters', addParams = '') => {
@@ -26,16 +36,11 @@ const useMarvelService = () => {
 		return res.data;
 	}
 
-	const getCharacter = async (id) => {
-		const res = await request(`${_apiBase}/characters/${id}?${_apiKey}`);
-		return _transformCharacter(res.data.results[0]);
-	}
-
 	const _transformCharacter = char => {
 		return {
 			id: char.id,
 			name: char.name,
-			descrition: char.descrition ? char.descrition.slice(0, 220) : 'Description not found',
+			description: char.description ? char.description.slice(0, 220) : 'Description not found',
 			thumbnail: char.thumbnail.path + '.' + char.thumbnail.extension,
 			homepage: char.urls[0].url,
 			wiki: char.urls[0].url,
@@ -46,10 +51,12 @@ const useMarvelService = () => {
 		return {
 			id: comic.id,
 			title: comic.title,
-			descrition: comic.descrition ? comic.descrition.slice(0, 220) : 'Description not found',
+			description: comic.description ? comic.description.slice(0, 220) : 'Description not found',
 			thumbnail: comic.thumbnail.path + '.' + comic.thumbnail.extension,
 			homepage: comic.urls[0].url,
-			price: comic.prices[0].price === 0 ? 'No price' : comic.prices[0].price + '$'
+			price: comic.prices[0].price === 0 ? 'NOT AVAILABLE' : comic.prices[0].price + '$',
+			pageCount: comic.pageCount || 0,
+			language: comic.textObjects.length ? `Language: ${comic.textObjects[0].language}` : null
 		}
 	}
 
@@ -60,7 +67,8 @@ const useMarvelService = () => {
 		getData,
 		getAllCharacters,
 		getCharacter,
-		getAllComics
+		getAllComics,
+		getComic
 	}
 }
 

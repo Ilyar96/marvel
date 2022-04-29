@@ -16,8 +16,6 @@ const CharList = ({ onCharSelected, observerRef }) => {
 
 	const { loading, error, getData, getAllCharacters } = useMarvelService();
 
-
-
 	useEffect(() => {
 		onRequest(offset, true);
 		getData().then(res => setTotalCharacters(res.total));

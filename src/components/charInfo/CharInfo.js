@@ -7,6 +7,7 @@ import ErrorMessage from '../errorMessage/ErrorMessage';
 import Skeleton from '../skeleton/Skeleton';
 
 import './charInfo.scss';
+import { Link } from 'react-router-dom';
 
 const CharInfo = ({ charId }) => {
 	const [char, setChar] = useState(null);
@@ -46,13 +47,17 @@ const CharInfo = ({ charId }) => {
 }
 
 const View = ({ char }) => {
-	const { name, descrition, thumbnail, homepage, wiki, comics } = char;
+	const { name, description, thumbnail, homepage, wiki, comics } = char;
 	let comicsKey = 1;
 
-	const comicsList = comics.map(({ name }, index) => {
+	const comicsList = comics.map(({ name, resourceURI }, index) => {
 		if (index > 9) return;
+		const comicId = resourceURI.slice(+resourceURI.indexOf('comics/') + 7);
+
 		return (
-			<li className="char__comics-item" key={comicsKey++}>{name}</li>
+			<li className="char__comics-item" key={comicsKey++}>
+				<Link to={`/comics/${comicId}`} >{name}</Link>
+			</li >
 		)
 	})
 
@@ -77,7 +82,7 @@ const View = ({ char }) => {
 					</div>
 				</div>
 			</div>
-			<div className="char__descr">{descrition}</div>
+			<div className="char__descr">{description}</div>
 			<div className="char__comics">Comics:</div>
 			<ul className="char__comics-list">
 				{!comics.length ? 'Comics not found' : null}

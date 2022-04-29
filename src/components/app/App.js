@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 
 import AppHeader from "../appHeader/AppHeader";
-import { MainPage, ComicsPage } from "../pages";
+import { MainPage, ComicsPage, SingleComicPage, Page404 } from "../pages";
 
 
 const App = () => {
@@ -15,10 +15,9 @@ const App = () => {
 				<main>
 					<Routes>
 						<Route path="/" element={<MainPage observerRef={observerRef} />} />
-						<Route path="/comics" element={<ComicsPage observerRef={observerRef} />} >
-							//! Создаем вложенную структуру /comics/test || Для вывода дочерних элементов используем компоненнт Outlet
-							<Route path="test" element={<MainPage observerRef={observerRef} />} />
-						</Route>
+						<Route path="/comics" element={<ComicsPage observerRef={observerRef} />} />
+						<Route path="/comics/:comicId" element={<SingleComicPage />} />
+						<Route path="*" element={<Page404 />} />
 					</Routes>
 				</main>
 				<div
