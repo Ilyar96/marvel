@@ -43,7 +43,25 @@ const CharList = ({ onCharSelected, observerRef }) => {
 		itemRefs.current[id].focus();
 	}
 
-	const onCharListLoaded = (newCharList) => {
+	if (loading) {
+		//! Динамический импорт
+		//! На нативном js
+		//Запуск функции // Динамический импорт всегда возвращает промис с объектом модуля
+		import('./someFunc')
+			.then(obj => obj.logger())
+			.catch();
+		//! Динамический импорт экспорта по умолчанию
+		import('./someFunc')
+			.then(obj => obj.default())
+			.catch();
+	}
+
+	const onCharListLoaded = async (newCharList) => {
+		//? Для того, чтобы вытащить несколько функций нужно воспользоваться асинхронным синтаксисом деструктуризации
+		const { logger, secondLog } = await import('./someFunc');
+		logger();
+		secondLog();
+
 		let ended = totalCharacters !== 0 && (totalCharacters - offset <= 9) ? true : false;
 
 		setCharList(() => [...charList, ...newCharList]);
