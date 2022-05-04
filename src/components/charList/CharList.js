@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { TransitionGroup, CSSTransition } from 'react-transition-group';
 import propTypes from 'prop-types';
 
 import Spinner from '../spinner/Spinner';
@@ -62,29 +63,36 @@ const CharList = ({ onCharSelected, observerRef }) => {
 			}
 
 			return (
-				<li
-					className="char__item"
+				<CSSTransition
+					timeout={500}
+					classNames="char__item"
 					key={item.id}
-					ref={el => itemRefs.current[i] = el}
-					tabIndex="0"
-					onClick={() => {
-						onCharSelected(item.id);
-						focusOnItem(i);
-					}}
-					onKeyPress={(e) => {
-						if (e.key === ' ' || e.key === "Enter") {
+				>
+					<li
+						className="char__item"
+						ref={el => itemRefs.current[i] = el}
+						tabIndex="0"
+						onClick={() => {
 							onCharSelected(item.id);
 							focusOnItem(i);
-						}
-					}}>
-					<img src={item.thumbnail} alt={item.name} style={imgStyle} />
-					<div className="char__name">{item.name}</div>
-				</li>
+						}}
+						onKeyPress={(e) => {
+							if (e.key === ' ' || e.key === "Enter") {
+								onCharSelected(item.id);
+								focusOnItem(i);
+							}
+						}}>
+						<img src={item.thumbnail} alt={item.name} style={imgStyle} />
+						<div className="char__name">{item.name}</div>
+					</li>
+				</CSSTransition>
 			)
 		});
 		return (
 			<ul className="char__grid">
-				{items}
+				<TransitionGroup component={null}>
+					{items}
+				</TransitionGroup>
 			</ul>
 		)
 	}

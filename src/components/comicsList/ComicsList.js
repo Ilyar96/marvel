@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { TransitionGroup, CSSTransition } from 'react-transition-group';
 
 import useMarvelService from '../../services/MarvelService';
 import Spinner from '../spinner/Spinner';
@@ -49,27 +50,36 @@ const ComicsList = ({ observerRef }) => {
 	}
 
 	const renderComics = arr => {
-		const items = arr.map(({ id, title, thumbnail, price }) => {
+		const items = arr.map(({ id, title, thumbnail, price }, index) => {
 			let imgStyle = { 'objectFit': 'cover' };
 			if (thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg') {
 				imgStyle = { 'objectFit': 'unset' };
 			}
 
-			return <li
-				className="comics__item"
-				key={nextId()}
-				tabIndex="0">
-				<Link to={`${id}`}>
-					<img src={thumbnail} alt={title} className="comics__item-img" style={imgStyle} />
-					<div className="comics__item-name">{title}</div>
-					<div className="comics__item-price">{price}</div>
-				</Link>
-			</li>
+			return (
+				<CSSTransition
+					timeout={500}
+					classNames="comics__item"
+					key={index}
+				>
+					<li
+						className="comics__item"
+						tabIndex="0">
+						<Link to={`${id}`}>
+							<img src={thumbnail} alt={title} className="comics__item-img" style={imgStyle} />
+							<div className="comics__item-name">{title}</div>
+							<div className="comics__item-price">{price}</div>
+						</Link>
+					</li>
+				</CSSTransition>
+			)
 		});
 
 		return (
 			<ul className="comics__grid">
-				{items}
+				<TransitionGroup component={null}>
+					{items}
+				</TransitionGroup>
 			</ul>
 		)
 	}
