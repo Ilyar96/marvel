@@ -6,9 +6,23 @@ import useMarvelService from '../../services/MarvelService';
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 import useIntersectionObserver from '../../hooks/useIntersectionObserver';
-import nextId from "react-id-generator";
 
 import './comicsList.scss';
+
+const setContent = (process, Component, newItemsLoading) => {
+	switch (process) {
+		case 'waiting':
+			return <Spinner />
+		case 'loading':
+			return newItemsLoading ? <Component /> : < Spinner />
+		case 'confirmed':
+			return <Component />
+		case 'error':
+			return <ErrorMessage />
+		default:
+			throw new Error('unexpected process state')
+	}
+}
 
 const ComicsList = ({ observerRef }) => {
 	const [comicsList, setComicsList] = useState([]);
@@ -17,8 +31,7 @@ const ComicsList = ({ observerRef }) => {
 	const [comicsEnded, setComicsEnded] = useState(false);
 	const [totalComics, setTotalComics] = useState(0);
 
-	const { loading, error, getAllComics, getData } = useMarvelService();
-
+	const { process, setProcess, getAllComics, getData } = useMarvelService();
 	useEffect(() => {
 		onRequest(offset, true);
 		getData('comics', 'issueNumber=1').then(res => setTotalComics(res.total));
@@ -27,7 +40,7 @@ const ComicsList = ({ observerRef }) => {
 	useIntersectionObserver({
 		target: observerRef,
 		onIntersect: ([{ isIntersecting }], observerElement) => {
-			if (isIntersecting && !loading) {
+			if (isIntersecting && process !== 'loading') {
 				onRequest(offset);
 			}
 		}
@@ -37,7 +50,8 @@ const ComicsList = ({ observerRef }) => {
 		initial ? setNewItemsLoading(false) : setNewItemsLoading(true);
 
 		getAllComics(offset)
-			.then(onComicsListLoaded);
+			.then(onComicsListLoaded)
+			.then(() => { setProcess('confirmed') });
 	}
 
 	const onComicsListLoaded = (newComicsList) => {
@@ -84,20 +98,21 @@ const ComicsList = ({ observerRef }) => {
 		)
 	}
 
-	const spinner = loading && !newItemsLoading ? <Spinner /> : null;
-	const errorMessage = !loading && error ? <ErrorMessage /> : null;
-	const items = renderComics(comicsList);
-
 	return (
 		<div className="comics__list">
-			{spinner}
-			{errorMessage}
-			{items}
+			{setContent(process, () => renderComics(comicsList), newItemsLoading)}
 			<button
 				className="button button__main button__long"
 				onClick={() => onRequest(offset)}
-				style={{ display: comicsEnded ? 'none' : 'block' }}
-				disabled={newItemsLoading}>
+				style={
+					{
+						display: comicsEnded ||
+							process === 'waiting' ||
+							(process === 'loading' && !newItemsLoading) ?
+							'none' : 'block'
+					}
+				}
+				disabled={process === 'loading'}>
 				<div className="inner">load more</div>
 			</button>
 		</div>

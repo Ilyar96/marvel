@@ -2,11 +2,26 @@ import { useState, useEffect, useRef } from 'react';
 import { TransitionGroup, CSSTransition } from 'react-transition-group';
 import propTypes from 'prop-types';
 
+import useMarvelService from '../../services/MarvelService';
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
-import useMarvelService from '../../services/MarvelService';
 import useIntersectionObserver from '../../hooks/useIntersectionObserver';
 import './charList.scss';
+
+const setContent = (process, Component, newItemsLoading) => {
+	switch (process) {
+		case 'waiting':
+			return <Spinner />
+		case 'loading':
+			return newItemsLoading ? <Component /> : < Spinner />
+		case 'confirmed':
+			return <Component />
+		case 'error':
+			return <ErrorMessage />
+		default:
+			throw new Error('unexpected process state')
+	}
+}
 
 const CharList = ({ onCharSelected, observerRef }) => {
 	const [charList, setCharList] = useState([]);
@@ -15,7 +30,7 @@ const CharList = ({ onCharSelected, observerRef }) => {
 	const [charEnded, setCharEnded] = useState(false);
 	const [totalCharacters, setTotalCharacters] = useState(0);
 
-	const { loading, error, getData, getAllCharacters } = useMarvelService();
+	const { loading, process, setProcess, getData, getAllCharacters } = useMarvelService();
 
 	useEffect(() => {
 		onRequest(offset, true);
@@ -25,7 +40,7 @@ const CharList = ({ onCharSelected, observerRef }) => {
 	useIntersectionObserver({
 		target: observerRef,
 		onIntersect: ([{ isIntersecting }], observerElement) => {
-			if (isIntersecting && !loading) {
+			if (isIntersecting && process !== 'loading') {
 				onRequest(offset);
 			}
 		}
@@ -33,9 +48,9 @@ const CharList = ({ onCharSelected, observerRef }) => {
 
 	const onRequest = (offset, initial) => {
 		initial ? setNewItemsLoading(false) : setNewItemsLoading(true);
-
 		getAllCharacters(offset)
-			.then(onCharListLoaded);
+			.then(onCharListLoaded)
+			.then(() => { setProcess('confirmed') });
 	}
 
 	const focusOnItem = id => {
@@ -97,20 +112,20 @@ const CharList = ({ onCharSelected, observerRef }) => {
 		)
 	}
 
-
-	const items = renderItems(charList);
-	const errorMessage = error ? <ErrorMessage /> : null;
-	const spinner = loading && !newItemsLoading ? <Spinner /> : null;
-
 	return (
 		<div className="char__list">
-			{errorMessage}
-			{spinner}
-			{items}
+			{setContent(process, () => renderItems(charList), newItemsLoading)}
 			<button
 				className="button button__main button__long"
 				disabled={newItemsLoading}
-				style={{ display: charEnded ? 'none' : 'block' }}
+				style={
+					{
+						display: charEnded ||
+							process === 'waiting' ||
+							(process === 'loading' && !newItemsLoading) ?
+							'none' : 'block'
+					}
+				}
 				onClick={() => { onRequest(offset) }}>
 				<div className="inner">load more</div>
 			</button>

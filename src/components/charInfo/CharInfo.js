@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import propTypes from 'prop-types';
 
 import useMarvelService from "../../services/MarvelService";
-import Spinner from '../spinner/Spinner';
-import ErrorMessage from '../errorMessage/ErrorMessage';
-import Skeleton from '../skeleton/Skeleton';
+import setContent from '../../utils/setContent';
 
 import './charInfo.scss';
 import { Link } from 'react-router-dom';
@@ -12,7 +10,7 @@ import { Link } from 'react-router-dom';
 const CharInfo = ({ charId }) => {
 	const [char, setChar] = useState(null);
 
-	const { loading, error, clearError, getCharacter } = useMarvelService();
+	const { clearError, process, setProcess, getCharacter } = useMarvelService();
 
 	useEffect(() => {
 		updateChar();
@@ -25,29 +23,22 @@ const CharInfo = ({ charId }) => {
 
 		clearError();
 		getCharacter(charId)
-			.then(onCharLoaded);
+			.then(onCharLoaded)
+			.then(() => { setProcess('confirmed') }); //! Так как получение данных происходит асинхронно  меняем состояние после получения данных 
 	}
 
 
 	const onCharLoaded = char => setChar(char);
 
-	const skeleton = char || loading || error ? null : <Skeleton />;
-	const errorMessage = error ? <ErrorMessage /> : null;
-	const spinner = loading ? <Spinner /> : null;
-	const content = !(loading || error || !char) ? <View char={char} /> : null;
-
 	return (
 		<div className="char__info" >
-			{skeleton}
-			{errorMessage}
-			{spinner}
-			{content}
+			{setContent(process, View, char)}
 		</div>
 	)
 }
 
-const View = ({ char }) => {
-	const { name, description, thumbnail, homepage, wiki, comics } = char;
+const View = ({ data }) => {
+	const { name, description, thumbnail, homepage, wiki, comics } = data;
 	let comicsKey = 1;
 
 	const comicsList = comics.map(({ name, resourceURI }, index) => {

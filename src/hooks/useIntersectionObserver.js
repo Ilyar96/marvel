@@ -4,7 +4,7 @@ const useIntersectionObserver = ({
 	target,
 	onIntersect,
 	rootMargin = '0px',
-	threshold = 1.0
+	threshold = 1
 }) => {
 	useEffect(() => {
 		const observer = new IntersectionObserver(onIntersect, {
@@ -22,3 +22,5 @@ const useIntersectionObserver = ({
 }
 
 export default useIntersectionObserver;
+
+// ! Для решения проблем со сдвигом окна до конца страницы и дозагрузки безконечной использовал для main css свойство overflow-anchor: none;

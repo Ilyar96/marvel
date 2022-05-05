@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import Spinner from '../spinner/Spinner';
 import useMarvelService from "../../services/MarvelService";
-import ErrorMessage from "../errorMessage/ErrorMessage";
+import setContent from '../../utils/setContent';
 
 import './randomChar.scss';
 import mjolnir from '../../resources/img/mjolnir.png';
@@ -9,7 +8,7 @@ import mjolnir from '../../resources/img/mjolnir.png';
 const RandomChar = props => {
 	const [char, setChar] = useState({});
 
-	const { loading, error, getCharacter, clearError } = useMarvelService();
+	const { process, setProcess, getCharacter, clearError } = useMarvelService();
 
 	useEffect(() => {
 		updateChar();
@@ -25,18 +24,14 @@ const RandomChar = props => {
 		const id = Math.floor(Math.random() * (1011400 - 1011000) + 1011000);
 
 		getCharacter(id)
-			.then(onCharLoaded);
+			.then(onCharLoaded)
+			.then(() => { setProcess('confirmed') });
 	}
 
-	const errorMessage = error && !loading ? <ErrorMessage /> : null;
-	const spinner = loading ? <Spinner /> : null;
-	const content = !(loading || error) ? <View char={char} /> : null;
 
 	return (
 		<div className="randomchar" >
-			{spinner}
-			{errorMessage}
-			{content}
+			{setContent(process, View, char)}
 			<div className="randomchar__static">
 				<p className="randomchar__title">
 					Random character for today!<br />
@@ -48,7 +43,7 @@ const RandomChar = props => {
 				<button
 					onClick={updateChar}
 					className="button button__main"
-					disabled={loading}>
+					disabled={process === 'loading'}>
 					<div className="inner">try it</div>
 				</button>
 				<img src={mjolnir} alt="mjolnir" className="randomchar__decoration" />
@@ -57,8 +52,8 @@ const RandomChar = props => {
 	)
 }
 
-const View = ({ char }) => {
-	const { name, descrition, thumbnail, homepage, wiki } = char;
+const View = ({ data }) => {
+	const { name, description, thumbnail, homepage, wiki } = data;
 	let imgStyle = { 'objectFit': 'cover' };
 	if (thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg') {
 		imgStyle = { 'objectFit': 'contain' };
@@ -69,7 +64,7 @@ const View = ({ char }) => {
 			<img src={thumbnail} alt="Random character" className="randomchar__img" style={imgStyle} />
 			<div className="randomchar__info">
 				<p className="randomchar__name">{name}</p>
-				<p className="randomchar__descr">{descrition}</p>
+				<p className="randomchar__descr">{description}</p>
 				<div className="randomchar__btns">
 					<a href={homepage} className="button button__main" target="_blank" rel="noreferrer">
 						<div className="inner">homepage</div>
